@@ -72,3 +72,69 @@ def optimized_displacement(nbar):
     )
 
     return result.x, result.fun
+
+def detector_outcome_probability(signal, beta, clicked):
+
+    displaced_amplitude = signal + beta
+    p_no_click = no_click_probability(displaced_amplitude)
+
+    if clicked:
+        return 1 - p_no_click
+
+    return p_no_click
+
+
+def two_stage_error(
+    nbar,
+    beta_first,
+    beta_after_no_click,
+    beta_after_click
+):
+
+    alpha_bin = np.sqrt(nbar / 2)
+
+    total_error = 0.0
+
+    for first_click in [False, True]:
+
+        if first_click:
+            beta_second = beta_after_click
+        else:
+            beta_second = beta_after_no_click
+
+        for second_click in [False, True]:
+
+            p_plus = (
+                detector_outcome_probability(
+                    +alpha_bin,
+                    beta_first,
+                    first_click
+                )
+                *
+                detector_outcome_probability(
+                    +alpha_bin,
+                    beta_second,
+                    second_click
+                )
+            )
+
+            p_minus = (
+                detector_outcome_probability(
+                    -alpha_bin,
+                    beta_first,
+                    first_click
+                )
+                *
+                detector_outcome_probability(
+                    -alpha_bin,
+                    beta_second,
+                    second_click
+                )
+            )
+
+            total_error += min(
+                0.5 * p_plus,
+                0.5 * p_minus
+            )
+
+    return total_error
